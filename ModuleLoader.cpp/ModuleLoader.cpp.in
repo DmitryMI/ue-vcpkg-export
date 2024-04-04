@@ -1,0 +1,55 @@
+#include "${ModuleName}LoaderModule.h"
+
+void F${ModuleName}LoaderModule::StartupModule()
+{
+	FString Platform = FPlatformProperties::IniPlatformName();
+	for (const FString& BinaryName : DynamicLibraryBinaryNames[Platform])
+	{
+		void* Handle = LoadDynamicLibrary(BinaryName);
+		DynamicLibraryHandles.Add(Handle);
+	}
+}
+
+void F${ModuleName}LoaderModule::ShutdownModule()
+{
+	while (DynamicLibraryHandles.Num() > 0)
+	{
+		void* Handle = DynamicLibraryHandles.Pop();
+		FPlatformProcess::FreeDllHandle(Handle);
+	}
+}
+
+void* F${ModuleName}LoaderModule::LoadDynamicLibrary(const FString& LibName)
+{
+	FString GameSourceDirRelative = FPaths::GameSourceDir();
+	FString GameSourceDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*GameSourceDirRelative);
+
+
+	FString BinariesDir = FModuleManager::Get().GetGameBinariesDirectory();
+	FString FullLibPath = FPaths::Combine(BinariesDir, LibName);
+	FullLibPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FullLibPath);
+
+	if (IFileManager::Get().FileExists(*FullLibPath))
+	{
+		UE_LOG(LogTemp, Display, TEXT("Loading GDAL: File %s exists"), *FullLibPath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Loading GDAL: File %s does not exist!"), *FullLibPath);
+	}
+
+	void* Handle = FPlatformProcess::GetDllHandle(*FullLibPath);
+
+	if (Handle != nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("%s loaded successfully!"), *FullLibPath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Fatal, TEXT("%s failed to load!"), *FullLibPath);
+	}
+
+return Handle;
+}
+
+IMPLEMENT_MODULE(F${ModuleName}LoaderModule, ${ModuleName}LoaderModule);

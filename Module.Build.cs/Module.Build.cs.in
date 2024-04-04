@@ -1,0 +1,85 @@
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnrealBuildTool;
+
+public class ${ModuleName} : ModuleRules
+{ 
+    private static Dictionary<string, object> GetMatchingFileRecord(UnrealArch arch, UnrealTargetPlatform platform, IEnumerable<Dictionary<string, object>> fileRecords)
+    {
+        foreach (Dictionary<string, object> record in fileRecords)
+        {
+            UnrealArch matchingArch = UnrealArch.Parse((string)record["MatchingArchitecture"]);
+            UnrealTargetPlatform matchingPlatform = UnrealTargetPlatform.Parse((string)record["MatchingTargetPlatform"]);
+            if (matchingArch == arch && matchingPlatform == platform)
+            {
+                return record;
+            }
+        }
+
+        return null;
+    }
+
+    public ${ModuleName}(ReadOnlyTargetRules Target) : base(Target)
+
+    {
+        Type = ModuleType.External;
+
+        Dictionary<string, object>[] records = ${TripletFileRecords};
+
+        Dictionary<string, object> tripletFileRecord = GetMatchingFileRecord(Target.Architecture, Target.Platform, records);
+        if (tripletFileRecord == null)
+        {
+            throw new Exception($"Platform and Architecture combination is not supported: {Target.Platform.ToString()}|{Target.Architecture.ToString()}");
+        }
+
+        PublicDefinitions.AddRange((string[])tripletFileRecord["PublicDefinitions"]);
+        PublicSystemIncludePaths.AddRange((string[])tripletFileRecord["PublicIncludePaths"]);
+        PublicAdditionalLibraries.AddRange((string[])tripletFileRecord["PublicAdditionalLibraries"]);
+        foreach (string dll in (string[])tripletFileRecord["RuntimeDependencies"])
+        {
+            RuntimeDependencies.Add(dll);
+        }
+
+        if (Target.Type == TargetType.Editor)
+        {
+            if (Target.ProjectFile == null)
+            {
+                throw new Exception("Project file path is required in order to determine the Binaries directory location.");
+            }
+
+            foreach (string dynamicLib in (string[])tripletFileRecord["RuntimeDependencies"])
+            {
+                string dynamicLibFileName = Path.GetFileName(dynamicLib);
+                PublicDelayLoadDLLs.Add(dynamicLibFileName);
+                string projectDir = Target.ProjectFile.Directory.FullName;
+                string binariesTargetDirectory = Path.Combine(projectDir, $"Binaries", Target.Platform.ToString());
+                string dllTargetPath = Path.Combine(binariesTargetDirectory, dynamicLibFileName);
+                
+				
+				if(File.Exists(dllTargetPath))
+				{
+					DateTime sourceFileModifiedTime = System.IO.File.GetLastWriteTime(dynamicLib);
+					DateTime targetFileModifiedTime = System.IO.File.GetLastWriteTime(dynamicLib);
+					
+					if(targetFileModifiedTime < sourceFileModifiedTime)
+					{
+						Logger.LogInformation($"Installing dynamic library for ${ModuleName}: {dynamicLib} is newer than {dllTargetPath}, rewriting...");
+						File.Copy(dynamicLib, dllTargetPath, true);
+					}
+					else
+					{
+						Logger.LogInformation($"Installing dynamic library for ${ModuleName}: {dynamicLib} is not newer than {dllTargetPath}, skipping.");
+					}
+				}
+				else
+				{
+					Logger.LogInformation($"Installing dynamic library for ${ModuleName}: Copying {dynamicLib} to {dllTargetPath}...");
+					File.Copy(dynamicLib, dllTargetPath, true);
+				}
+				
+            }
+        }
+    }
+}

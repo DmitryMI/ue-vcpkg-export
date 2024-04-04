@@ -1,0 +1,12 @@
+using System;
+using System.IO;
+using UnrealBuildTool;
+
+public class ${ModuleName}Loader : ModuleRules
+{
+	public ${ModuleName}Loader (ReadOnlyTargetRules Target) : base(Target)
+	{
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "${ModuleName}"});
+    }
+}

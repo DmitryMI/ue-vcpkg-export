@@ -1,0 +1,23 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Modules/ModuleInterface.h"
+#include "Modules/ModuleManager.h"
+
+/// <summary>
+/// Loader Module for ${ModuleName}. Only required for Editor targets.
+/// </summary>
+class F${ModuleName}LoaderModule: public IModuleInterface
+{
+public:
+	void StartupModule();
+	void ShutdownModule();
+
+private:
+
+	TMap<FString, TArray<FString>> DynamicLibraryBinaryNames = ${DynamicLibraryBinaryNames};
+
+	TArray<void*> DynamicLibraryHandles;
+
+	void* LoadDynamicLibrary(const FString& LibName);
+};
