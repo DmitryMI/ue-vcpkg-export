@@ -57,7 +57,7 @@ public class ${ModuleName} : ModuleRules
                 string binariesTargetDirectory = Path.Combine(projectDir, $"Binaries", Target.Platform.ToString());
                 string dllTargetPath = Path.Combine(binariesTargetDirectory, dynamicLibFileName);
                 
-				
+				bool shouldCopy = false;
 				if(File.Exists(dllTargetPath))
 				{
 					DateTime sourceFileModifiedTime = System.IO.File.GetLastWriteTime(dynamicLib);
@@ -66,7 +66,7 @@ public class ${ModuleName} : ModuleRules
 					if(targetFileModifiedTime < sourceFileModifiedTime)
 					{
 						Logger.LogInformation($"Installing dynamic library for ${ModuleName}: {dynamicLib} is newer than {dllTargetPath}, rewriting...");
-						File.Copy(dynamicLib, dllTargetPath, true);
+						shouldCopy = true;
 					}
 					else
 					{
@@ -75,10 +75,14 @@ public class ${ModuleName} : ModuleRules
 				}
 				else
 				{
+					shouldCopy = true;
 					Logger.LogInformation($"Installing dynamic library for ${ModuleName}: Copying {dynamicLib} to {dllTargetPath}...");
-					File.Copy(dynamicLib, dllTargetPath, true);
 				}
 				
+				if(shouldCopy)
+				{
+					File.Copy(dynamicLib, dllTargetPath, true);
+				}
             }
         }
     }

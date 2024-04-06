@@ -23,10 +23,14 @@ void* F${ModuleName}LoaderModule::LoadDynamicLibrary(const FString& LibName)
 {
 	FString GameSourceDirRelative = FPaths::GameSourceDir();
 	FString GameSourceDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*GameSourceDirRelative);
+	FString LibraryDirectory = FPaths::Combine(GameSourceDir, "ThirdParty", "${ModuleName}", "x64-windows", "bin");
+	FPlatformProcess::AddDllDirectory(*LibraryDirectory);
 
-
-	FString BinariesDir = FModuleManager::Get().GetGameBinariesDirectory();
-	FString FullLibPath = FPaths::Combine(BinariesDir, LibName);
+	// FString BinariesDir = FModuleManager::Get().GetGameBinariesDirectory();
+	// FString FullLibPath = FPaths::Combine(BinariesDir, LibName);
+	
+	FString FullLibPath = FPaths::Combine(LibraryDirectory, LibName);
+	
 	FullLibPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FullLibPath);
 
 	if (IFileManager::Get().FileExists(*FullLibPath))
