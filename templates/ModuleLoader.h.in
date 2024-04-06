@@ -22,5 +22,5 @@ private:
 
 	TArray<void*> DynamicLibraryHandles;
 
-	void* LoadDynamicLibrary(const FString& LibName);
+	void* LoadDynamicLibrary(const FString& LibPathRelativeToModuleDir);
 };

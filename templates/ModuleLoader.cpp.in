@@ -32,15 +32,16 @@ void F${ModuleName}LoaderModule::ShutdownModule()
 	}
 }
 
-void* F${ModuleName}LoaderModule::LoadDynamicLibrary(const FString& LibName)
+void* F${ModuleName}LoaderModule::LoadDynamicLibrary(const FString& LibPathRelativeToModuleDir)
 {
 	FString GameSourceDirRelative = FPaths::GameSourceDir();
 	FString GameSourceDir = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*GameSourceDirRelative);
-	FString LibraryDirectory = FPaths::Combine(GameSourceDir, "ThirdParty", "${ModuleName}", "x64-windows", "bin");
+	FString LibraryDirectoryRelativeToModuleDir = FPaths::GetPath(LibPathRelativeToModuleDir);
+	FString LibraryFileName = FPaths::GetCleanFilename(LibPathRelativeToModuleDir);
+	FString LibraryDirectory = FPaths::Combine(GameSourceDir, "ThirdParty", "${ModuleName}", LibraryDirectoryRelativeToModuleDir);
 	FPlatformProcess::AddDllDirectory(*LibraryDirectory);
 
-	FString FullLibPath = FPaths::Combine(LibraryDirectory, LibName);
-	
+	FString FullLibPath = FPaths::Combine(LibraryDirectory, LibraryFileName);
 	FullLibPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FullLibPath);
 
 	void* Handle = FPlatformProcess::GetDllHandle(*FullLibPath);

@@ -301,12 +301,15 @@ class UeVcpkgExport:
         return triplet_files
 
     @staticmethod
-    def _generate_dynamic_library_binary_names(triplet_files: dict[str, list[str]]):
+    def _generate_dynamic_library_binary_paths(triplet_files: dict[str, list[str]]):
         map_items = []
         for triplet, files in triplet_files.items():
             ext = UeVcpkgExport._get_dynamic_library_extension(triplet)
             dlls = list(UeVcpkgExport._get_files_extension_filter(files, ext))
-            items = [f"TEXT(\"{os.path.basename(dll)}\")" for dll in dlls]
+            items = []
+            for dll in dlls:
+                dll_path = os.path.join(triplet, dll).replace(os.sep, "/")
+                items.append(f"TEXT(\"{dll_path}\")")
             ini_platform = UeVcpkgExport._triplet_to_unreal_ini_platform(triplet)
             map_items.append(f"TEXT(\"{ini_platform}\")" + ", {" + ", ".join(items) + "}")
 
@@ -357,7 +360,7 @@ class UeVcpkgExport:
         text = module_loader_h_template.substitute(
             {
                 "ModuleName": module_name,
-                "DynamicLibraryBinaryNames": UeVcpkgExport._generate_dynamic_library_binary_names(triplet_files),
+                "DynamicLibraryBinaryNames": UeVcpkgExport._generate_dynamic_library_binary_paths(triplet_files),
                 "DependencyModuleLoaderNames": self._generate_dependency_module_loader_names()
             }
         )
@@ -483,11 +486,11 @@ class UeVcpkgExport:
             else:
                 shutil.rmtree(module_loader_output_dir)
 
-        module_private_dir = os.path.join(module_output_dir, "Private")
-        module_public_dir = os.path.join(module_output_dir, "Public")
-
-        os.makedirs(module_private_dir)
-        os.makedirs(module_public_dir)
+        os.makedirs(module_output_dir)
+        # module_private_dir = os.path.join(module_output_dir, "Private")
+        # module_public_dir = os.path.join(module_output_dir, "Public")
+        # os.makedirs(module_private_dir)
+        # os.makedirs(module_public_dir)
 
         triplet_files = self.get_triplet_files()
 
@@ -498,9 +501,9 @@ class UeVcpkgExport:
 
         if UeVcpkgExport._is_loader_module_needed(triplet_files):
             module_loader_private_dir = os.path.join(module_loader_output_dir, "Private")
-            module_loader_public_dir = os.path.join(module_loader_output_dir, "Public")
+            # module_loader_public_dir = os.path.join(module_loader_output_dir, "Public")
             os.makedirs(module_loader_private_dir)
-            os.makedirs(module_loader_public_dir)
+            # os.makedirs(module_loader_public_dir)
 
             loader_build_cs_text = self._generate_loader_build_cs(module_loader_build_cs_dir)
             module_loader_h_text = self._generate_module_loader_h(module_loader_h_dir, triplet_files)
