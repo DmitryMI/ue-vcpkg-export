@@ -1,0 +1,39 @@
+{
+	"package_rules": {
+	
+		"boost.*": {
+			"do_export": false,
+			"do_reference": true,
+			"reference_name": "Boost" 
+		},
+		
+		"zlib": {
+			"do_export": true,
+			"do_reference": true,
+			"export_name": "ZlibDynamic",
+			"reference_name": "ZlibDynamic" 
+		},
+		
+		"openssl.*": {
+			"do_export": true,
+			"do_reference": true,
+			"export_name": "OpenSSLDynamic",
+			"reference_name": "OpenSSLDynamic" 
+		},
+		
+		".*vcpkg.*": {
+			"do_export": false,
+			"do_reference": false
+		},
+		
+		".*cmake.*": {
+			"do_export": false,
+			"do_reference": false
+		},
+		
+		"pkgconf.*": {
+			"do_export": false,
+			"do_reference": false
+		}
+	}
+}
