@@ -238,8 +238,7 @@ class UeVcpkgExport:
         )
         return csharp_dictionary
 
-    def _generate_build_cs(self, module_build_cs_dir: str, triplet_files: dict[str, list[str]]):
-        module_build_template_path = os.path.join(module_build_cs_dir, "Module.Build.cs.in")
+    def _generate_build_cs(self, module_build_template_path: str, triplet_files: dict[str, list[str]]):
         with open(module_build_template_path, "r") as file_in:
             module_build_template = TemplatedString(file_in.read())
 
@@ -262,9 +261,8 @@ class UeVcpkgExport:
 
         return build_cs
 
-    def _generate_loader_build_cs(self, module_loader_build_cs_dir):
-        module_loader_build_template_path = os.path.join(module_loader_build_cs_dir, "ModuleLoader.Build.cs.in")
-        with open(module_loader_build_template_path, "r") as file_in:
+    def _generate_loader_build_cs(self, module_loader_build_cs_path):
+        with open(module_loader_build_cs_path, "r") as file_in:
             module_loader_build_template = TemplatedString(file_in.read())
 
         build_cs = module_loader_build_template.substitute(
@@ -351,8 +349,7 @@ class UeVcpkgExport:
             names.add(f"\"{module_name}Loader\"")
         return ", ".join(names)
 
-    def _generate_module_loader_h(self, module_loader_h_dir: str, triplet_files: dict[str, list[str]]):
-        module_loader_h_template_path = os.path.join(module_loader_h_dir, "ModuleLoader.h.in")
+    def _generate_module_loader_h(self, module_loader_h_template_path: str, triplet_files: dict[str, list[str]]):
         with open(module_loader_h_template_path, "r") as file_in:
             module_loader_h_template = TemplatedString(file_in.read())
         module_name = self.get_module_export_name()
@@ -366,8 +363,7 @@ class UeVcpkgExport:
         )
         return text
 
-    def _generate_module_loader_cpp(self, module_loader_cpp_dir: str):
-        module_loader_cpp_template_path = os.path.join(module_loader_cpp_dir, "ModuleLoader.cpp.in")
+    def _generate_module_loader_cpp(self, module_loader_cpp_template_path: str):
         with open(module_loader_cpp_template_path, "r") as file_in:
             module_loader_cpp_template = TemplatedString(file_in.read())
 
@@ -550,10 +546,10 @@ def main():
     parser.add_argument("--export_fnmatch", nargs="+", default=["include/**", "lib/**", "bin/**"])
     parser.add_argument("--export_extension", nargs="+", default=[".dll", ".so", ".lib", ".h", ".hpp"])
 
-    parser.add_argument("--loader_build_cs_templates", default="ModuleLoader.Build.cs")
-    parser.add_argument("--module_build_cs_templates", default="Module.Build.cs")
-    parser.add_argument("--module_loader_h_templates", default="ModuleLoader.h")
-    parser.add_argument("--module_loader_cpp_templates", default="ModuleLoader.cpp")
+    parser.add_argument("--loader_build_cs_template", default="templates/ModuleLoader.Build.cs.in")
+    parser.add_argument("--module_build_cs_template", default="templates/Module.Build.cs.in")
+    parser.add_argument("--module_loader_h_template", default="templates/ModuleLoader.h.in")
+    parser.add_argument("--module_loader_cpp_template", default="templates/ModuleLoader.cpp.in")
 
     parser.add_argument("--with_dependencies", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
@@ -587,19 +583,19 @@ def main():
 
     if not args.with_dependencies:
         export_obj.export(
-            args.build_cs_templates,
-            args.module_h_templates,
-            args.module_cpp_templates,
+            args.build_cs_template,
+            args.module_h_template,
+            args.module_cpp_template,
             args.output_dir,
             args.overwrite
         )
     else:
         for package_name, package_export in packages_dict.items():
             package_export.export(
-                args.module_build_cs_templates,
-                args.loader_build_cs_templates,
-                args.module_loader_h_templates,
-                args.module_loader_cpp_templates,
+                args.module_build_cs_template,
+                args.loader_build_cs_template,
+                args.module_loader_h_template,
+                args.module_loader_cpp_template,
                 args.output_dir,
                 args.overwrite
             )
