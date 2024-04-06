@@ -22,11 +22,12 @@ public class ${ModuleName} : ModuleRules
     }
 
     public ${ModuleName}(ReadOnlyTargetRules Target) : base(Target)
-
     {
         Type = ModuleType.External;
 
         Dictionary<string, object>[] records = ${TripletFileRecords};
+		string[] dependencyModuleNames = new string[]{${DependencyModuleNames}};
+		string[] dependencyModuleLoaderNames = new string[]{${DependencyModuleLoaderNames}};
 
         Dictionary<string, object> tripletFileRecord = GetMatchingFileRecord(Target.Architecture, Target.Platform, records);
         if (tripletFileRecord == null)
@@ -41,49 +42,21 @@ public class ${ModuleName} : ModuleRules
         {
             RuntimeDependencies.Add(dll);
         }
+		
+		PublicDependencyModuleNames.AddRange(dependencyModuleNames);
 
         if (Target.Type == TargetType.Editor)
         {
-            if (Target.ProjectFile == null)
-            {
-                throw new Exception("Project file path is required in order to determine the Binaries directory location.");
-            }
-
             foreach (string dynamicLib in (string[])tripletFileRecord["RuntimeDependencies"])
             {
                 string dynamicLibFileName = Path.GetFileName(dynamicLib);
                 PublicDelayLoadDLLs.Add(dynamicLibFileName);
-                string projectDir = Target.ProjectFile.Directory.FullName;
-                string binariesTargetDirectory = Path.Combine(projectDir, $"Binaries", Target.Platform.ToString());
-                string dllTargetPath = Path.Combine(binariesTargetDirectory, dynamicLibFileName);
-                
-				bool shouldCopy = false;
-				if(File.Exists(dllTargetPath))
-				{
-					DateTime sourceFileModifiedTime = System.IO.File.GetLastWriteTime(dynamicLib);
-					DateTime targetFileModifiedTime = System.IO.File.GetLastWriteTime(dynamicLib);
-					
-					if(targetFileModifiedTime < sourceFileModifiedTime)
-					{
-						Logger.LogInformation($"Installing dynamic library for ${ModuleName}: {dynamicLib} is newer than {dllTargetPath}, rewriting...");
-						shouldCopy = true;
-					}
-					else
-					{
-						Logger.LogInformation($"Installing dynamic library for ${ModuleName}: {dynamicLib} is not newer than {dllTargetPath}, skipping.");
-					}
-				}
-				else
-				{
-					shouldCopy = true;
-					Logger.LogInformation($"Installing dynamic library for ${ModuleName}: Copying {dynamicLib} to {dllTargetPath}...");
-				}
-				
-				if(shouldCopy)
-				{
-					File.Copy(dynamicLib, dllTargetPath, true);
-				}
             }
+			
+			foreach(string dependencyModuleLoaderName in dependencyModuleLoaderNames)
+			{
+				PrivateDependencyModuleNames.Add(dependencyModuleLoaderName);
+			}
         }
     }
 }

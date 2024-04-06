@@ -16,6 +16,7 @@ public:
 private:
 
 	TMap<FString, TArray<FString>> DynamicLibraryBinaryNames = ${DynamicLibraryBinaryNames};
+	TArray<FName> RequiredModules = {${DependencyModuleLoaderNames}};
 
 	TArray<void*> DynamicLibraryHandles;
 

@@ -1,6 +1,0 @@
-.*vcpkg.*
-.*cmake.*
-boost.*
-openssl.*
-zlib
-pkgconf.*

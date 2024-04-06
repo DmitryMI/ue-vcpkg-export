@@ -2,6 +2,17 @@
 
 void F${ModuleName}LoaderModule::StartupModule()
 {
+	FModuleManager& Manager = FModuleManager::Get();
+	for(const FName& RequiredModule : RequiredModules)
+	{
+		if(!Manager.IsModuleLoaded(RequiredModule))
+		{
+			UE_LOG(LogTemp, Display, TEXT("Loading %s, required by ${ModuleName}"), *RequiredModule.ToString());
+			IModuleInterface* RequiredModuleInterface = Manager.LoadModule(RequiredModule, ELoadModuleFlags::LogFailures);
+			verifyf(RequiredModuleInterface != nullptr, TEXT("Failed to load module %s!"), *RequiredModule.ToString());
+		}
+	}
+
 	FString Platform = FPlatformProperties::IniPlatformName();
 	for (const FString& BinaryName : DynamicLibraryBinaryNames[Platform])
 	{
@@ -26,34 +37,13 @@ void* F${ModuleName}LoaderModule::LoadDynamicLibrary(const FString& LibName)
 	FString LibraryDirectory = FPaths::Combine(GameSourceDir, "ThirdParty", "${ModuleName}", "x64-windows", "bin");
 	FPlatformProcess::AddDllDirectory(*LibraryDirectory);
 
-	// FString BinariesDir = FModuleManager::Get().GetGameBinariesDirectory();
-	// FString FullLibPath = FPaths::Combine(BinariesDir, LibName);
-	
 	FString FullLibPath = FPaths::Combine(LibraryDirectory, LibName);
 	
 	FullLibPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FullLibPath);
 
-	if (IFileManager::Get().FileExists(*FullLibPath))
-	{
-		UE_LOG(LogTemp, Display, TEXT("Loading GDAL: File %s exists"), *FullLibPath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Loading GDAL: File %s does not exist!"), *FullLibPath);
-	}
-
 	void* Handle = FPlatformProcess::GetDllHandle(*FullLibPath);
-
-	if (Handle != nullptr)
-	{
-		UE_LOG(LogTemp, Log, TEXT("%s loaded successfully!"), *FullLibPath);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Fatal, TEXT("%s failed to load!"), *FullLibPath);
-	}
-
-return Handle;
+	verifyf(Handle != nullptr, TEXT("Failed to load %s"), *FullLibPath);
+	return Handle;
 }
 
 IMPLEMENT_MODULE(F${ModuleName}LoaderModule, ${ModuleName}LoaderModule);
